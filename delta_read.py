@@ -39,16 +39,16 @@ def _is_valid_container_name(study):
 
 @bp_delta.route(route="delta_read2", auth_level=AuthLevel.FUNCTION, methods=["GET"])
 def delta_read2(req: HttpRequest):
-    pid = req.headers.get("x-user-id")
     study = req.params.get("study")
     tipe = req.params.get("type")
+    pid = req.headers.get("x-user-id")
     did = req.params.get("did")
     ts_start = req.params.get("ts_start")
     ts_end = req.params.get("ts_end")
     days = req.params.get("days", "1")
 
-    if not all([pid, study, tipe]):
-        return HttpResponse("Missing required params: pid, study, or type", status_code=400)
+    if not all([study, tipe]):
+        return HttpResponse("Missing required params: study, or type", status_code=400)
 
     if not _is_valid_container_name(study):
         return HttpResponse(f"Invalid study given: '{study}'", status_code=400)
