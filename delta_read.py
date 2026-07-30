@@ -13,8 +13,6 @@ from azure.identity import DefaultAzureCredential
 
 bp_delta = Blueprint()
 
-# comment
-
 _STORAGE_SCOPE = "https://storage.azure.com/.default"
 _CREDENTIAL = DefaultAzureCredential()
 _CONTAINER_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
