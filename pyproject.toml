@@ -3,9 +3,9 @@ name = "azure-function"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "azure-functions>=2.2.0",
+    "azure-functions>=1.24.0",
     "azure-identity>=1.25.3",
     "azure-storage-blob>=12.30.0",
     "deltalake>=1.6.2",
