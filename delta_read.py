@@ -8,7 +8,7 @@ import pyarrow.compute as pc
 from deltalake import write_deltalake, DeltaTable
 
 from azure.storage.blob import BlobServiceClient
-from azure.functions import Blueprint, AuthLevel, HttpRequest, HttpResponse, TimerRequest
+from azure.functions import Blueprint, AuthLevel, HttpRequest, HttpResponse, TimerRequest, FunctionApp
 from azure.identity import DefaultAzureCredential
 
 bp_delta = Blueprint()
@@ -37,7 +37,7 @@ _ARROW_SCHEMA_SANS_STUDY = pa.schema([
 def _is_valid_container_name(study):
     return study in {"mtm-t2"}
 
-@bp_delta.route(route="delta_read2", auth_level=AuthLevel.FUNCTION, methods=["GET"])
+@bp_delta.route(route="delta-read", auth_level=AuthLevel.FUNCTION, methods=["GET"])
 def delta_read2(req: HttpRequest):
     study = req.params.get("study")
     tipe = req.params.get("type")
@@ -80,3 +80,6 @@ def delta_read2(req: HttpRequest):
 
     except Exception:
         return HttpResponse(status_code=500)
+
+app = FunctionApp()
+app.register_functions(bp_delta)
