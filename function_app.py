@@ -75,7 +75,7 @@ def delta_read(req: HttpRequest):
         if did:
            condition = condition & (pc.field("did") == did)
 
-        table = dataset.scanner(columns=["ts", "data"], filter=condition).to_table()
+        table = dataset.scanner(columns=["ts", "data"], filter=None).to_table()
         return HttpResponse(orjson.dumps(table.to_pylist()), status_code=200, mimetype="application/json")
 
     except Exception:
