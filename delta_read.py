@@ -5,10 +5,9 @@ import re
 
 import pyarrow as pa
 import pyarrow.compute as pc
-from deltalake import write_deltalake, DeltaTable
+from deltalake import DeltaTable
 
-from azure.storage.blob import BlobServiceClient
-from azure.functions import Blueprint, AuthLevel, HttpRequest, HttpResponse, TimerRequest, FunctionApp
+from azure.functions import Blueprint, AuthLevel, HttpRequest, HttpResponse, FunctionApp
 from azure.identity import DefaultAzureCredential
 
 bp_delta = Blueprint()
