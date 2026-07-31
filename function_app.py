@@ -38,8 +38,8 @@ def delta_read(req: HttpRequest):
         return HttpResponse(f"Invalid study given: '{study}'", status_code=400)
 
     try:
-        ts_end = float(ts_end) if ts_end else datetime.datetime.now(datetime.timezone.utc).timestamp()
-        ts_start = float(ts_start) if ts_start else ts_end - float(days) * 86400
+        ts_end = float(ts_end) if ts_end is not None else datetime.datetime.now(datetime.timezone.utc).timestamp()
+        ts_start = float(ts_start) if ts_start is not None else ts_end - float(days) * 86400
 
     except ValueError:
         return HttpResponse("Invalid time params. Use days=N or ts_start/ts_end as unix timestamps.", status_code=400)
@@ -74,7 +74,7 @@ def delta_read(req: HttpRequest):
             (pid, (pc.field("pid") == pid)),
             (did, (pc.field("did") == did)),
         )
-        
+
         filters.extend(expression for value, expression in optional_filters if value is not None)
         condition = functools.reduce(operator.and_, filters)
 
