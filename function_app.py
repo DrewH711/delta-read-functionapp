@@ -19,8 +19,8 @@ _CREDENTIAL = DefaultAzureCredential()
 def _is_valid_container_name(study):
     return study in {"mtm-t2"}
 
-@bp_delta.route(route="delta-read", auth_level=AuthLevel.FUNCTION, methods=["GET"])
-def delta_read2(req: HttpRequest):
+@bp_delta.route(route="delta_read", auth_level=AuthLevel.FUNCTION, methods=["GET"])
+def delta_read(req: HttpRequest):
     study = req.params.get("study")
     tipe = req.params.get("type")
     pid = req.headers.get("x-user-id")
