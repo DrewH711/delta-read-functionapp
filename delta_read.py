@@ -14,24 +14,6 @@ bp_delta = Blueprint()
 
 _STORAGE_SCOPE = "https://storage.azure.com/.default"
 _CREDENTIAL = DefaultAzureCredential()
-_CONTAINER_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-_ARROW_SCHEMA_WITH_STUDY = pa.schema([
-    pa.field("ts",    pa.float64(), nullable=False),
-    pa.field("tz",    pa.string()),
-    pa.field("pid",   pa.string(),  nullable=False),
-    pa.field("did",   pa.string()),
-    pa.field("study", pa.string(),  nullable=False),
-    pa.field("type",  pa.string(),  nullable=False),
-    pa.field("data",  pa.string()),
-])
-_ARROW_SCHEMA_SANS_STUDY = pa.schema([
-    pa.field("ts",    pa.float64(), nullable=False),
-    pa.field("tz",    pa.string()),
-    pa.field("pid",   pa.string(),  nullable=False),
-    pa.field("did",   pa.string()),
-    pa.field("type",  pa.string(),  nullable=False),
-    pa.field("data",  pa.string()),
-])
 
 def _is_valid_container_name(study):
     return study in {"mtm-t2"}
