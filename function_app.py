@@ -1,5 +1,7 @@
 import datetime
+import functools
 import logging
+import operator
 import orjson
 
 import pyarrow as pa
@@ -65,17 +67,17 @@ def delta_read(req: HttpRequest):
         return HttpResponse(status_code=500)
 
     try:
-        condition = (
-            (pc.field("pid")  == pid     ) &
-            (pc.field("type") == tipe    ) &
-            (pc.field("ts")   >  ts_start) &
-            (pc.field("ts")   <= ts_end  )
+        filters = [pc.field("type") == tipe]
+        optional_filters = (
+            (pid, pc.field("pid") == pid),
+            (ts_start, pc.field("ts") >= ts_start),
+            (ts_end, pc.field("ts") <= ts_end),
+            (did, pc.field("did") == did),
         )
+        filters.extend(expression for value, expression in optional_filters if value is not None)
+        condition = functools.reduce(operator.and_, filters)
 
-        if did:
-           condition = condition & (pc.field("did") == did)
-
-        table = dataset.scanner(columns=["ts", "data"], filter=None).to_table()
+        table = dataset.scanner(columns=["ts", "data"], filter=condition).to_table()
         return HttpResponse(orjson.dumps(table.to_pylist()), status_code=200, mimetype="application/json")
 
     except Exception:
