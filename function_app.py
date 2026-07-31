@@ -40,12 +40,13 @@ def delta_read(req: HttpRequest):
     try:
         ts_end = float(ts_end) if ts_end else datetime.datetime.now(datetime.timezone.utc).timestamp()
         ts_start = float(ts_start) if ts_start else ts_end - float(days) * 86400
+
     except ValueError:
         return HttpResponse("Invalid time params. Use days=N or ts_start/ts_end as unix timestamps.", status_code=400)
 
     table_uri = f"abfs://{study}/datums"
     account_name = "trailsoutputs"
-    
+
     try:
         storage_options = {"ACCOUNT_NAME": account_name, "BEARER_TOKEN": _CREDENTIAL.get_token(_STORAGE_SCOPE).token}
         dataset = DeltaTable(table_uri, storage_options=storage_options).to_pyarrow_dataset()
@@ -67,13 +68,13 @@ def delta_read(req: HttpRequest):
         return HttpResponse(status_code=500)
 
     try:
-        filters = [(pc.field("type") == tipe)]
+        filters = [(pc.field("type") == tipe) & (pc.field("ts") >= ts_start) & (pc.field("ts") <= ts_end)]
+
         optional_filters = (
             (pid, (pc.field("pid") == pid)),
-            (ts_start, (pc.field("ts") >= ts_start)),
-            (ts_end, (pc.field("ts") <= ts_end)),
             (did, (pc.field("did") == did)),
         )
+        
         filters.extend(expression for value, expression in optional_filters if value is not None)
         condition = functools.reduce(operator.and_, filters)
 
