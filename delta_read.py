@@ -63,4 +63,4 @@ def delta_read2(req: HttpRequest):
         return HttpResponse(status_code=500)
 
 app = FunctionApp()
-app.register_functions(bp_delta)
+app.register_blueprint(bp_delta)
