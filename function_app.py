@@ -78,7 +78,7 @@ def delta_read(req: HttpRequest):
         filters.extend(expression for value, expression in optional_filters if value is not None)
         condition = functools.reduce(operator.and_, filters)
 
-        table = dataset.scanner(columns=["ts", "data"], filter=condition).to_table()
+        table = dataset.scanner(columns=["ts", "pid", "data"], filter=condition).to_table()
         return HttpResponse(orjson.dumps(table.to_pylist()), status_code=200, mimetype="application/json")
 
     except Exception:
