@@ -125,7 +125,7 @@ def download_data(req: HttpRequest):
     pacsv.write_csv(dataset, buffer)
 
     return HttpResponse(body=buffer.getvalue(), status_code=200, mimetype="text/csv", 
-    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d_%H:%m")}"'})
+    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d")}"'})
     
 app = FunctionApp()
 app.register_blueprint(bp_delta)
