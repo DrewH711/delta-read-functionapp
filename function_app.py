@@ -3,9 +3,12 @@ import functools
 import logging
 import operator
 import orjson
+import io
 
 import pyarrow as pa
 import pyarrow.compute as pc
+from pyarrow import csv as pacsv
+import time
 from deltalake import DeltaTable
 from deltalake.exceptions import TableNotFoundError
 
@@ -84,5 +87,45 @@ def delta_read(req: HttpRequest):
     except Exception:
         return HttpResponse(status_code=500)
 
+@bp_delta.route(route="download-data", auth_level=AuthLevel.FUNCTION, methods=["GET"])
+def download_data(req: HttpRequest):
+    study = req.params.get("study")
+
+    if not study:
+        return HttpResponse("Missing required params: study", status_code=400)
+
+    if not _is_valid_container_name(study):
+        return HttpResponse(f"Invalid study given: '{study}'", status_code=400)
+
+    table_uri = f"abfs://{study}/datums"
+    account_name = "trailsoutputs"
+
+    try:
+        storage_options = {"ACCOUNT_NAME": account_name, "BEARER_TOKEN": _CREDENTIAL.get_token(_STORAGE_SCOPE).token}
+        dataset = DeltaTable(table_uri, storage_options=storage_options).to_pyarrow_table()
+
+    except ClientAuthenticationError:
+        logging.exception(
+            "Could not acquire a storage token for account '%s'. Check that the function app has a "
+            "managed identity enabled and that AZURE_CLIENT_ID is set if it is user-assigned.",
+            account_name
+        )
+        return HttpResponse(status_code=500)
+    except TableNotFoundError:
+        logging.warning("No delta table at %s (account '%s')", table_uri, account_name)
+        return HttpResponse(f"No data for study '{study}'", status_code=404)
+    except Exception:
+        # Auth/permission failures from the storage account surface here as OSError,
+        # so log the detail; the identity most likely lacks Storage Blob Data Reader.
+        logging.exception("Failed to open %s on account '%s'", table_uri, account_name)
+        return HttpResponse(status_code=500)
+
+    
+    buffer = io.BytesIO()
+    pacsv.write_csv(dataset, buffer)
+
+    return HttpResponse(body=buffer.getvalue(), status_code=200, mimetype="text/csv", 
+    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d_%H:%m")}"'})
+    
 app = FunctionApp()
 app.register_blueprint(bp_delta)
