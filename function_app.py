@@ -64,8 +64,8 @@ def delta_read(req: HttpRequest):
     ts_end = req.params.get("ts_end")
     days = req.params.get("days")
 
-    if not all([study, tipe]):
-        return HttpResponse("Missing required params: study, or type", status_code=400)
+    if not all([study, tipe, days]) and not all([study, tipe, ts_start, ts_end]):
+        return HttpResponse("Missing required params: study, type, or time", status_code=400)
 
     study_response = load_study(study)
     if isinstance(study_response, HttpResponse):
@@ -79,6 +79,10 @@ def delta_read(req: HttpRequest):
         start = today - datetime.timedelta(days=days+1) # type: ignore
         start = datetime.datetime(year=start.year, month=start.month, day=start.day)
         ts_start = start.timestamp()
+
+    else:
+        ts_start = float(ts_start)
+        ts_end = float(ts_end)
 
     try:
         filters = [(pc.field("type") == tipe) & (pc.field("ts") >= ts_start) & (pc.field("ts") <= ts_end)]
