@@ -45,11 +45,11 @@ def load_study(study) -> DeltaTable | HttpResponse:
     except TableNotFoundError:
         logging.warning("No delta table at %s (account '%s')", table_uri, account_name)
         return HttpResponse(f"No data for study '{study}'", status_code=404)
-    except Exception:
+    except Exception as e:
         # Auth/permission failures from the storage account surface here as OSError,
         # so log the detail; the identity most likely lacks Storage Blob Data Reader.
         logging.exception("Failed to open %s on account '%s'", table_uri, account_name)
-        return HttpResponse(status_code=500)
+        return HttpResponse(str(e), status_code=500)
 
     return dt
 
