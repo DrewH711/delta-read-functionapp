@@ -118,7 +118,7 @@ def download_data(req: HttpRequest):
     pacsv.write_csv(dataset, buffer)
 
     return HttpResponse(body=buffer.getvalue(), status_code=200, mimetype="text/csv", 
-    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%m-%d")}.csv"'})
+    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d")}.csv"'})
 
 @bp_delta.route(route="get/flows-per-day", auth_level=AuthLevel.FUNCTION, methods=["GET"])
 def flows_per_day(req: HttpRequest):
@@ -141,7 +141,7 @@ def flows_per_day(req: HttpRequest):
     offset = today.utcoffset().total_seconds() if today.utcoffset() else 0  # type: ignore 
     today = datetime.datetime(year=today.year, month=today.month, day=today.day) + datetime.timedelta(days=1)
     for i in range(1, days+1):
-        date = datetime.datetime.strftime(today - datetime.timedelta(days=i), "%Y-%m-%d")
+        date = datetime.datetime.strftime(today - datetime.timedelta(days=i), "%m-%d")
         flows_per_day[date] = 0
     start = today - datetime.timedelta(days=days+1) # type: ignore
     start = datetime.datetime(year=start.year, month=start.month, day=start.day)
