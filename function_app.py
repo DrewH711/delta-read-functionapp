@@ -118,7 +118,7 @@ def download_data(req: HttpRequest):
     pacsv.write_csv(dataset, buffer)
 
     return HttpResponse(body=buffer.getvalue(), status_code=200, mimetype="text/csv", 
-    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d")}.csv"'})
+    headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%m-%d")}.csv"'})
 
 @bp_delta.route(route="get/flows-per-day", auth_level=AuthLevel.FUNCTION, methods=["GET"])
 def flows_per_day(req: HttpRequest):
