@@ -94,8 +94,8 @@ def delta_read(req: HttpRequest):
         table = dataset.scanner(columns=["ts", "pid", "data"], filter=condition).to_table()
         return HttpResponse(orjson.dumps(table.to_pylist()), status_code=200, mimetype="application/json")
 
-    except Exception:
-        return HttpResponse(status_code=500)
+    except Exception as e:
+        return HttpResponse(str(e),status_code=500)
 
 @bp_delta.route(route="download-data", auth_level=AuthLevel.FUNCTION, methods=["GET"])
 def download_data(req: HttpRequest):
