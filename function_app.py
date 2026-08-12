@@ -112,7 +112,7 @@ def download_data(req: HttpRequest):
     if isinstance(study_response, HttpResponse):
         return study_response
 
-    dataset = study_response.to_pyarrow_dataset() 
+    dataset = study_response.to_pyarrow_table() 
 
     buffer = io.BytesIO()
     pacsv.write_csv(dataset, buffer)
