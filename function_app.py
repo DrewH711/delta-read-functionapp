@@ -115,10 +115,7 @@ def download_data(req: HttpRequest):
     dataset = study_response.to_pyarrow_dataset() 
 
     buffer = io.BytesIO()
-    scanner = dataset.scanner()
-
-    with pa.output_stream(buffer) as sink:
-        pacsv.write_csv(scanner.to_reader(), sink)
+    pacsv.write_csv(dataset, buffer)
 
     return HttpResponse(body=buffer.getvalue(), status_code=200, mimetype="text/csv", 
     headers={"Content-Disposition": f'attachment ; filename="{study}_data_{time.strftime("%Y-%m-%d")}.csv"'})
