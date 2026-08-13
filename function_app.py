@@ -149,7 +149,7 @@ def flows_per_day(req: HttpRequest):
 
     tbl = dataset.to_table(
         columns={
-            "day": (pc.field("ts") + offset).cast(pa.int64(), safe=False).cast(pa.timestamp("s")).cast(pa.date32()),
+            "day": pc.strftime((pc.field("ts") + offset).cast(pa.int64(), safe=False).cast(pa.timestamp("s")).cast(pa.date32()), "%m-%d"),
             "data": pc.field("data")
         },
         filter= (pc.field("ts") >= ts_start) & (pc.field("type")=="Flow")
