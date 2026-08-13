@@ -206,6 +206,37 @@ def total_of_type(req: HttpRequest):
             filter=(pc.field("ts") >= ts_start) & (pc.field("type") == tipe)
         )
         return HttpResponse(body=str(subtable.num_rows), status_code=200, mimetype='text/plain')
+
+@bp_delta.route(route="get/active-participants", auth_level=AuthLevel.FUNCTION, methods=["GET"])
+def get_active_participants(req: HttpRequest):
+    # an active participant is a uid that has any flow data in the time specified
+    study = req.params.get("study")
+    days = req.params.get("days")
+
+    if not all([study, days]):
+        return HttpResponse("Missing at least one required param: study or days", status_code=400)
+
+    study_response = load_study(study)
+    if isinstance(study_response, HttpResponse):
+        return study_response
+
+    now = datetime.datetime.now(datetime.timezone.utc).astimezone()
+    start = now - datetime.timedelta(days=int(days)) # type: ignore
+    start = datetime.datetime(year=start.year, month=start.month, day=start.day)
+    ts_start = start.timestamp()
+
+    dataset = study_response.to_pyarrow_dataset()
+
+    subtable = dataset.to_table(
+        columns=["pid"],
+        filter=(pc.field("ts") >= ts_start) & (pc.field("type")=="Flow")
+    )
+    
+    total = int(pc.count_distinct(subtable['pid']))
+
+    return HttpResponse(body=str(total), status_code=200, mimetype='text/plain')
+
+    
     
 app = FunctionApp()
 app.register_blueprint(bp_delta)
