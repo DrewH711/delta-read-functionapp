@@ -84,9 +84,7 @@ def delta_read(req: HttpRequest):
         try:
             days = int(days)
         except ValueError:
-            return HttpResponse(
-                "Param 'days' must be integer", status_code=400
-            )
+            return HttpResponse("Param 'days' must be integer", status_code=400)
         today = datetime.datetime.now().astimezone()
         today = datetime.datetime(
             year=today.year, month=today.month, day=today.day
@@ -97,8 +95,8 @@ def delta_read(req: HttpRequest):
 
     else:
         try:
-            ts_start = float(ts_start) # type: ignore
-            ts_end = float(ts_end) # type: ignore
+            ts_start = float(ts_start)  # type: ignore
+            ts_end = float(ts_end)  # type: ignore
         except (ValueError, TypeError):
             return HttpResponse(
                 "Params ts_start, ts_end must be float or int", status_code=400
@@ -173,14 +171,12 @@ def flows_per_day(req: HttpRequest):
     study_response = load_study(study)
     if isinstance(study_response, HttpResponse):
         return study_response
-    
+
     try:
-        days = int(days) 
+        days = int(days)
     except (ValueError, TypeError):
-        return HttpResponse(
-            "Param 'days' must be int", status_code=400
-        )
-    
+        return HttpResponse("Param 'days' must be int", status_code=400)
+
     dataset = study_response.to_pyarrow_dataset()
 
     flows_per_day = {}
@@ -241,9 +237,7 @@ def total_of_type(req: HttpRequest):
     try:
         days = int(days)
     except ValueError:
-        return HttpResponse(
-            "Param 'days' must be int", status_code=400
-        )
+        return HttpResponse("Param 'days' must be int", status_code=400)
 
     study_response = load_study(study)
     if isinstance(study_response, HttpResponse):
@@ -297,9 +291,7 @@ def get_active_participants(req: HttpRequest):
     try:
         days = int(days)
     except ValueError:
-        return HttpResponse(
-            "Param 'days' must be int", status_code=400
-        )
+        return HttpResponse("Param 'days' must be int", status_code=400)
 
     study_response = load_study(study)
     if isinstance(study_response, HttpResponse):
