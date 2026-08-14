@@ -236,7 +236,84 @@ def get_active_participants(req: HttpRequest):
 
     return HttpResponse(body=str(total), status_code=200, mimetype='text/plain')
 
-    
-    
+@bp_delta.route(route="get/sessions-per-day-by-participant", auth_level=AuthLevel.FUNCTION, methods=["GET"])
+def sessions_per_day_by_participant(req: HttpRequest):
+    # This endpoint will not return data for any nonexistent pids that are requested,
+    # but will return all 0s if a pid has not completed any sessions in the requested time frame
+
+    study = req.params.get("study")
+    days = req.params.get("days")
+    url_pids = req.params.get("pids")
+
+    if not all([study, days]):
+        return HttpResponse("Missing at least one required param: study or days", status_code=400)
+
+    days = int(days) # type: ignore
+
+    study_response = load_study(study)
+    if isinstance(study_response, HttpResponse):
+        return study_response
+
+    dataset = study_response.to_pyarrow_dataset()
+
+    pid_tbl = dataset.to_table(columns=["pid"])
+    valid_pids = {pid.as_py() for pid in pc.unique(pid_tbl["pid"])}
+
+    pids = None
+    if url_pids:
+        pids = [pid for pid in url_pids.replace("%2C", ",").replace("%2c", ",").split(",") if pid in valid_pids]
+        if len(pids) == 0:
+            # all pids entered were invalid, return empty response
+            return HttpResponse(orjson.dumps({}), status_code=200, mimetype="application/json")
+
+    today = datetime.datetime.now().astimezone()
+    offset = today.utcoffset().total_seconds() if today.utcoffset() else 0  # type: ignore
+    today = datetime.datetime(year=today.year, month=today.month, day=today.day) + datetime.timedelta(days=1)
+    dates = [
+        datetime.datetime.strftime(today - datetime.timedelta(days=i), "%m-%d")
+        for i in range(1, days+1)
+    ]
+    start = today - datetime.timedelta(days=days+1)
+    start = datetime.datetime(year=start.year, month=start.month, day=start.day)
+    ts_start = start.timestamp()
+
+    condition = (pc.field("ts") >= ts_start) & (pc.field("type") == "Flow")
+    if pids:
+        condition = condition & pc.field("pid").isin(pids)
+
+    tbl = dataset.to_table(
+        columns={
+            "pid": pc.field("pid"),
+            "day": pc.strftime((pc.field("ts") + offset).cast(pa.int64(), safe=False).cast(pa.timestamp("s")).cast(pa.date32()), "%m-%d"),
+            "data": pc.field("data")
+        },
+        filter=condition
+    )
+
+    if pids:
+        participant_ids = pids
+    else:
+        participant_ids = [pid.as_py() for pid in pc.unique(tbl["pid"])]
+
+    sessions_per_day = {
+        pid: {date: 0 for date in dates}
+        for pid in participant_ids
+    }
+
+    tbl = tbl.filter(pc.match_substring(tbl["data"], '\"value\":\"Completion\"'))
+    counts = tbl.group_by(["pid", "day"]).aggregate([("day", "count")])
+
+    pids_col = counts.column("pid")
+    days_col = counts.column("day")
+    counts_col = counts.column("day_count")
+
+    for i in range(len(pids_col)):
+        pid = pids_col[i].as_py()
+        date = days_col[i].as_py()
+        if pid in sessions_per_day and date in sessions_per_day[pid]:
+            sessions_per_day[pid][date] = counts_col[i].as_py()
+
+    return HttpResponse(orjson.dumps(sessions_per_day), status_code=200, mimetype="application/json")
+
 app = FunctionApp()
 app.register_blueprint(bp_delta)
